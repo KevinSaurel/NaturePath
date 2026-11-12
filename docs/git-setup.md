@@ -3,12 +3,12 @@
 - Repositorio: https://github.com/KevinSaurel/NaturePath
 - Directorio local: `/home/hugokevinruben/NaturePath`
 - Rama inicial: `main`
-- Remoto `origin`: `git@github.com:KevinSaurel/NaturePath.git`
+- Remoto `origin`: `https://github.com/KevinSaurel/NaturePath.git`
 
-## Estado observado al preparar
+## Diagnóstico del primer intento (antes de habilitar acceso completo)
 
-El remoto estaba vacío. La copia local está inicializada y tiene su commit base.
-**No se ha publicado ni sincronizado el commit con GitHub.**
+El remoto estaba vacío. Se preparó un commit local; aquel primer intento de
+publicación quedó bloqueado por las restricciones descritas abajo.
 
 Bloqueos verificados:
 
@@ -21,7 +21,7 @@ Bloqueos verificados:
 
 No se modificaron permisos del sistema, claves SSH ni credenciales.
 
-## Publicar cuando haya acceso
+## Publicar por HTTPS
 
 Desde una terminal de la Raspberry con red y autenticación GitHub operativas:
 
@@ -35,12 +35,13 @@ git ls-remote origin
 git push -u origin main
 ```
 
-Resolver la configuración SSH y disponer de una clave autorizada para usar la URL
-actual. Alternativamente, cambiar a HTTPS con autenticación disponible en esa terminal:
+El remoto utiliza HTTPS. Al solicitar credenciales, usar el usuario propietario
+del token (en este equipo, `hugoArenaza-deusto`) y el token como contraseña.
+Esa cuenta debe tener permiso de escritura en el repositorio.
+Para evitar guardar credenciales al publicar:
 
 ```bash
-git remote set-url origin https://github.com/KevinSaurel/NaturePath.git
-git push -u origin main
+git -c credential.helper= push -u origin main
 ```
 
 No hacer force push. Nunca guardar tokens o claves en archivos versionados.
