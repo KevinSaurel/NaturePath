@@ -1,30 +1,31 @@
 # NaturePath
 
-Sistema IoT de monitorización de condiciones de senderos para facilitar el acceso a la naturaleza.
-Proyecto grupal de IoT 2026–2027 · Universidad de Deusto.
+An IoT trail condition monitoring system designed to make access to nature more inclusive.
+IoT group project 2026–2027 · University of Deusto.
 
-**Equipo:** Hugo Arenaza, Kevin Saurel y Ruben Alonso.
+**Team:** Hugo Arenaza, Kevin Saurel, and Ruben Alonso.
 
-## Estado
+## Project status
 
-Repositorio preparado para empezar el desarrollo. El MVP todavía no está implementado.
-El documento propone Raspberry Pi 5, sensores Grove, Python, Flask y SQLite.
-La clasificación experimental será `good`, `caution`, `poor` y `unavailable` ante fallos.
-Es orientación ambiental, sin garantía de seguridad ni accesibilidad del sendero.
+The repository is ready for development. The MVP has not been implemented yet.
+The proposal uses a Raspberry Pi 5, Grove sensors, Python, Flask, and SQLite.
+The experimental classification will report `good`, `caution`, or `poor`, with
+`unavailable` used when sensor data cannot be trusted or obtained.
+The index provides environmental guidance and does not guarantee trail safety or accessibility.
 
-## Empezar en esta Raspberry
+## Getting started on this Raspberry Pi
 
 ```bash
 cd ~/NaturePath
 python3 scripts/check_environment.py
-# Entorno de laboratorio existente, con Flask y Grove instalados:
+# Existing lab environment with Flask and Grove installed:
 ~/grove_env/bin/python scripts/check_environment.py
 ```
 
-El diagnóstico no lee sensores ni activa salidas. La detección de módulos no valida el cableado.
-No hay servidor ni lectura automática de hardware en esta preparación.
+The diagnostic does not read sensors or activate outputs. Detecting Python modules
+does not validate the wiring. No server or automatic hardware acquisition is included yet.
 
-Para un entorno propio (requiere acceso a la red):
+To create a separate environment (requires network access):
 
 ```bash
 python3 -m venv --system-site-packages .venv
@@ -32,33 +33,35 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Grove se configura aparte según [hardware](docs/hardware.md). No instalar el antiguo
-`RPi.GPIO` en Pi 5. No es necesario modificar el entorno compartido `~/grove_env`.
+Configure Grove separately following the [hardware guide](docs/hardware.md).
+Do not install the legacy `RPi.GPIO` package on the Pi 5.
+The shared `~/grove_env` environment does not need to be modified.
 
-## Estructura
+## Repository structure
 
-- `docs/challengeIoT_groupXX-1.pdf`: documento original con las figuras.
-- `docs/challenge.md`: extracción de texto para consulta y búsquedas.
-- `docs/requirements.md`: alcance y criterios de aceptación.
-- `docs/architecture.md`: propuesta de módulos y contrato HTTP inicial.
-- `docs/backlog.md`: los cuatro sprints y sus comprobaciones.
-- `docs/hardware.md`: inventario y comprobaciones pendientes.
-- `docs/git-setup.md`: conexión Git y bloqueo de publicación observado.
-- `src/naturepath/`: código del proyecto; paquete vacío como punto de partida.
-- `scripts/`: herramientas de diagnóstico.
-- `tests/`: futuras pruebas del índice, persistencia y API.
-- `data/`: bases de datos locales, excluidas de Git.
+- `docs/challengeIoT_groupXX-1.pdf`: original proposal, including figures.
+- `docs/challenge.md`: extracted text for reference and searching.
+- `docs/requirements.md`: scope and acceptance criteria.
+- `docs/architecture.md`: proposed modules and initial HTTP API contract.
+- `docs/backlog.md`: four planned sprints and their completion criteria.
+- `docs/hardware.md`: hardware inventory and pending checks.
+- `docs/git-setup.md`: Git connection, authentication, and initial setup issues.
+- `src/naturepath/`: project source code; currently an empty starter package.
+- `scripts/`: environment diagnostic tools.
+- `tests/`: planned tests for classification, persistence, and the API.
+- `data/`: local databases, excluded from Git.
 
-## Trabajo en equipo
+## Team workflow
 
 ```bash
-git switch -c feat/nombre-tarea
-# Editar y comprobar los cambios
-git add ruta/al/archivo
-git commit -m "feat: describir cambio"
-git push -u origin feat/nombre-tarea
+git switch -c feat/task-name
+# Edit and check your changes
+git add path/to/file
+git commit -m "feat: describe change"
+git push -u origin feat/task-name
 ```
 
-Crear una pull request hacia `main` y pedir revisión a otro integrante. No subir
-credenciales, entornos virtuales, bases de datos ni datos simulados como mediciones reales.
-Antes de empezar una tarea, actualizar con `git pull --ff-only` cuando el acceso funcione.
+Open a pull request targeting `main` and ask another team member to review it.
+Keep credentials, virtual environments, and databases out of the repository.
+Clearly label simulated data so it cannot be mistaken for real measurements.
+Before starting a task, update your branch with `git pull --ff-only`.
