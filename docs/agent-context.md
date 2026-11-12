@@ -16,8 +16,9 @@ Its October dates are proposal dates. The implementation deadline is not confirm
 Target: Raspberry Pi 5 + Grove sensors + Python + Flask + SQLite; LCD, LED, buzzer
 and a visitor button. The experimental index uses `good`, `caution`, `poor` and
 `unavailable`. Keep the primary visitor experience physical; the dashboard is for
-monitoring. All required hardware is available according to the user, but exact
-models, ports and calibrations remain unconfirmed.
+monitoring. All required hardware is available according to the user. The reported
+board labels/revisions are now recorded in `docs/hardware.md`; connections,
+chip identification where inferred, operation and calibration remain unverified.
 
 ## Repository and reference material
 
@@ -55,6 +56,11 @@ been implemented. No individual NaturePath sensor or actuator has been validated
 - Start with Open-Meteo for the academic MVP: no weather account/token is needed.
   The proposal mentions Euskalmet as a possible later source; OpenWeather and
   WeatherAPI are different services. Credit Open-Meteo when displaying its data.
+- Use the confirmed LED bar v2.1 as the main visual indicator; the Red LED Button
+  v1.0 supplies the visitor button and an acknowledgement LED. Both need two
+  digital signals; check the complete HAT pin map before assigning ports.
+- Manufacturer family docs suggest DHT11 for the ambient sensor and MMA7660FC
+  for the ±1.5g accelerometer; these are expected identities, not physical chip tests.
 - Do not hard-code example GPIO assignments from the labs.
 - Calibrate thresholds using actual observations. ADC voltage percentage is not
   calibrated soil water content; CPU temperature is not ambient temperature.
@@ -66,9 +72,10 @@ been implemented. No individual NaturePath sensor or actuator has been validated
 
 ## Pending inputs and next implementation step
 
-The user is preparing before coding. Obtain the exact sensor/actuator models and
-module-to-port mapping, confirm the monitored location, and arrange physical
-calibration observations. The accelerometer needs a fixed orientation/reference.
+The user is preparing before coding. All eight module names/revisions have been
+provided and recorded in `docs/hardware.md`. Next obtain current connections or
+agree a conflict-free port map, confirm inferred chip identities and the monitored
+location, and arrange physical calibration observations. The accelerometer needs a fixed orientation/reference.
 Follow Sprint 1 of the roadmap: test modules individually, record calibration,
 then build real soil-moisture acquisition and a minimal status API. Software
 interfaces/test fixtures can be prepared while physical information is collected.

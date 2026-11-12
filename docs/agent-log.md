@@ -119,3 +119,36 @@ as proof of a future push.
 coding. Exact models, wiring, location and calibration observations are outstanding.
 Keyboard behaviour remains unresolved despite configuration changes. Credential
 revocation is unverified. Continue with Sprint 1 only within the user's authorised scope.
+
+## 2026-11-12 UTC — Codex — confirmed module inventory and LED bar plan
+
+**Commit subject:** `docs: record Grove module inventory and LED bar design`
+
+**What:** Replaced the generic hardware checklist with all eight user-reported
+module names/revisions in `docs/hardware.md`. Added expected interfaces, candidate
+local drivers, pending connection fields, validation order and manufacturer links.
+Updated the current handoff and roadmap to use LED Bar v2.1 as the main visual
+indicator and Red LED Button v1.0 as the visitor input/acknowledgement device.
+
+**Why:** The user supplied the actual inventory and selected the LED bar to model
+a future park entrance. Recording the two-signal requirements prevents future
+agents from treating the bar or LED button as a one-GPIO plain LED/button.
+
+**Decisions / assumptions:** Reported board markings are user-confirmed; DHT11 and
+MMA7660FC identities and LCD/accelerometer addresses are expected from manufacturer
+family documentation and remain physically unverified. The LED bar uses explicit
+status masks, with LCD explanations, rather than an unexplained precision scale.
+No GPIO assignments or calibration thresholds were invented.
+
+**Validation:** Consulted Seeed manufacturer documentation for the LCD, ambient
+sensor, accelerometer, LED bar, LED button and water sensor. Inspected existing
+Grove source for JHD1802, LED button, water, moisture and ADC; observed contradictory
+wet/dry example thresholds in the water module, so calibration is required.
+Checked local documentation links, credential patterns and Git whitespace.
+Documentation-only change; no hardware activation, library installation or
+application tests performed. Verify publication through Git refs after pushing.
+
+**Limitations / next:** Obtain the current module-to-port mapping or agree a new
+conflict-free layout; confirm inferred device identities and electrical compatibility,
+then run bounded individual hardware tests and physical calibration. The full
+MVP implementation remains pending.

@@ -17,9 +17,11 @@ physical indicator is the main visitor interface.
 
 The team reports that all sensors and actuators are available. Plan to integrate
 soil moisture, water detection, ambient temperature/humidity and an accelerometer,
-plus the LCD, LED, buzzer and button. Exact models and connections still need to
-be recorded before selecting drivers. Having hardware available does not mean it
-has been connected, calibrated or verified.
+plus the white-on-blue LCD v2.0, LED bar v2.1, buzzer v1.2 and Red LED Button
+v1.0. All eight reported module names/revisions are now recorded in
+[hardware.md](hardware.md). Connections and inferred chip identities still need
+verification before fixing driver configuration. Availability does not mean the
+modules have been connected, calibrated or tested.
 
 The submitted proposal's minimum acceptance criteria remain the baseline. Water,
 ambient sensing and inclination extend the original moisture-first MVP using the
@@ -102,7 +104,7 @@ sensor has a recorded individual test, and invalid mandatory data yields
    a valid local reading; a failed mandatory sensor must not produce `good`.
 4. Include reasons for each classification. Add hysteresis or a short persistence
    rule to avoid flickering around a threshold. Validate boundary transitions.
-5. Implement LCD text, the actual LED type, short buzzer patterns and button
+5. Implement LCD text, explicit LED bar masks, short buzzer patterns and button
    debounce. Make status understandable without relying on colour alone.
 6. Ensure bounded buzzer duration and release resources on shutdown. Avoid
    blocking sensor acquisition while showing messages or playing feedback.
@@ -189,7 +191,7 @@ sample or browser request. Forecast data is context, not ground truth at the tra
 
 | Task | What to provide | Why it matters |
 | --- | --- | --- |
-| Inventory | Exact model/revision of moisture, water, ambient sensor, accelerometer, LCD, LED and buzzer | Driver/protocol compatibility, especially DHT variants on Pi 5 |
+| Inventory | Board labels/revisions supplied; confirm inferred sensor chips and actual driver compatibility | DHT timing on Pi 5 and MMA7660/LED bar driver selection |
 | Wiring | Module → labelled Grove port; BCM GPIO/channel and I2C address where known | Prevents driver and pin conflicts; lab ports are examples |
 | Mounting | How the accelerometer is fixed and its zero/reference angle | Makes inclination meaningful |
 | Calibration | Raw readings in dry/damp/wet soil, water absent/present and known angles | Enables defensible thresholds and transition tests |
