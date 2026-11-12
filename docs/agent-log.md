@@ -152,3 +152,27 @@ application tests performed. Verify publication through Git refs after pushing.
 conflict-free layout; confirm inferred device identities and electrical compatibility,
 then run bounded individual hardware tests and physical calibration. The full
 MVP implementation remains pending.
+
+## 2026-11-12 UTC — Codex — session close-out
+
+**Commit subject:** `docs: close agent session for 12 November 2026`
+
+**What:** Added `docs/sessions/2026-11-12.md` summarising the day's work, decisions,
+reported inventory, verification evidence, unresolved items and ordered resumption
+steps. Updated `docs/agent-context.md` to mark the session closed at the user's
+request and link the summary.
+
+**Why:** The user asked to publish a final daily agent record and continue another
+day. A concise handoff avoids redoing preparation or mistaking planning for working
+hardware/software. No further implementation or hardware activity is to continue
+as part of this session.
+
+**Validation:** Confirmed the repository was clean and synchronised before the
+close-out change. Checked local links, credential patterns and Git whitespace.
+No application tests were run for this documentation-only change. Publication and
+clean working-tree state are checked after push, without claiming them in advance.
+
+**Limitations / next:** MVP implementation, individual module tests and calibration
+remain pending. Next session starts with current connections or an agreed port map,
+especially the two-signal LED bar and LED button. Preserve the known uncertainties
+about driver identities, keyboard behaviour, credential revocation, location and deadline.

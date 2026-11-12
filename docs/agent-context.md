@@ -2,6 +2,10 @@
 
 Last updated: 12 November 2026 (UTC).
 
+Session closed at the user's request; continue on a later day. Read the
+[session summary](sessions/2026-11-12.md) before resuming. No further hardware
+activity or implementation is scheduled from this session.
+
 ## Project and accepted scope
 
 NaturePath is a University of Deusto IoT group project (2026–2027) by Hugo Arenaza,
