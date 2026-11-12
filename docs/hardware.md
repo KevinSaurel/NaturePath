@@ -7,20 +7,21 @@
 - Entorno de laboratorio `~/grove_env` con Flask 3.1.3, Grove y smbus2 detectables por Python.
 - Código existente en `~/lab4`, `~/lab5` y `~/grove.py`, conservado sin modificaciones.
 - Los dispositivos `/dev/i2c*` y `/dev/gpiochip*` no son visibles en esta sesión.
-  Esto no demuestra que I²C esté desactivado en el sistema anfitrión; puede deberse
-  al aislamiento de la terminal. Falta comprobar desde una terminal física de la Pi.
+  Esto correspondía a la sesión inicialmente aislada, no al estado del anfitrión.
+  Con acceso completo, el comprobador del Lab 4 pasa: GPIO compatible con Pi 5,
+  HAT ADC en `0x08` y dirección por defecto de Grove coincidente (12/11/2026).
 
 ## Cableado por confirmar
 
 | Componente | Puerto / dirección | Estado |
 | --- | --- | --- |
-| HAT Grove | I²C; comprobar 0x04 / 0x08 | Modelo exacto y dirección pendientes |
+| HAT Grove | I²C `0x08`, verificado con el checker del Lab 4 | Modelo exacto pendiente |
 | Humedad del suelo | Canal analógico por confirmar | Prioridad del sprint 1 |
 | LCD | Modelo y dirección por confirmar | Pendiente |
 | LED | Tipo y GPIO por confirmar | Pendiente |
 | Buzzer | Tipo y GPIO por confirmar | Pendiente |
 | Botón | GPIO por confirmar | Pendiente |
-| Sensores opcionales | Según disponibilidad | No requeridos para arrancar |
+| Agua, temperatura/humedad y acelerómetro | Modelos y puertos por confirmar | Disponibles según el equipo; pendientes de prueba |
 
 No inferir pines del proyecto a partir de los ejemplos de laboratorio.
 Conectar físicamente con la alimentación desconectada.

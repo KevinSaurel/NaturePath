@@ -1,5 +1,9 @@
 # Backlog inicial
 
+> Actualizado: el plan vigente está en [MVP implementation roadmap](roadmap.md),
+> revisado con los labs, la rúbrica y la disponibilidad de todos los componentes.
+> La lista siguiente conserva el planteamiento inicial.
+
 Plan extraído del apartado 11 del challenge. Reparto entre integrantes pendiente.
 
 ## Sprint 1 · Hardware y sensores

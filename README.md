@@ -37,6 +37,11 @@ Configure Grove separately following the [hardware guide](docs/hardware.md).
 Do not install the legacy `RPi.GPIO` package on the Pi 5.
 The shared `~/grove_env` environment does not need to be modified.
 
+## Implementation roadmap
+
+See the [MVP roadmap](docs/roadmap.md) for lab alignment, sprint deliverables,
+team inputs, weather integration, and later extensions.
+
 ## Repository structure
 
 - `docs/challengeIoT_groupXX-1.pdf`: original proposal, including figures.
