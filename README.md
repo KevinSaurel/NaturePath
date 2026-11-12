@@ -56,6 +56,11 @@ team inputs, weather integration, and later extensions.
 - `tests/`: planned tests for classification, persistence, and the API.
 - `data/`: local databases, excluded from Git.
 
+## Agent handoff
+
+Agents must follow [AGENTS.md](AGENTS.md), read the [current context](docs/agent-context.md),
+and record every work commit in the [agent log](docs/agent-log.md).
+
 ## Team workflow
 
 ```bash
