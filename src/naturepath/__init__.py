@@ -1,1 +1,1 @@
-"""NaturePath: base del proyecto. Implementación del MVP pendiente."""
+"""NaturePath: local hardware calibration and future trail monitoring."""

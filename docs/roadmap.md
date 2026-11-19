@@ -1,5 +1,9 @@
 # NaturePath implementation roadmap
 
+> 19 November update: the [local calibration workbench](calibration.md) and a
+> non-conflicting wiring plan are implemented. Real wiring, module tests and
+> calibration captures remain pending; the rest of the MVP below is still planned.
+
 Planning baseline: 12 November 2026. Build the complete MVP first; extend it only
 when there is a demonstrated need. This roadmap supersedes the initial task list
 in [backlog.md](backlog.md).

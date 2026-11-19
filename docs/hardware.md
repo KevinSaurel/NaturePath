@@ -53,18 +53,22 @@ Do not install GrovePi code just because an official example imports `grovepi`:
 this project has a Grove Base HAT, which is different hardware. Arduino and old
 Raspberry Pi examples need adaptation to the actual Pi 5 backend.
 
-## Connection plan: pending physical information
+## Assigned connection plan (19 November 2026)
+
+The user reports modules are currently disconnected. The following plan is now
+assigned in software; physical connection and validation are still pending.
+See [the calibration guide](calibration.md) for operation and capture procedure.
 
 | Module | Grove port label | BCM GPIO(s) / ADC channel | I2C address |
 | --- | --- | --- | --- |
-| Soil moisture | TBD | ADC channel TBD | HAT ADC `0x08`, verified |
-| Water | TBD | ADC channel TBD | Via HAT ADC |
-| Temperature/humidity | TBD | GPIO TBD | Not I2C for the expected DHT11 variant |
-| Buzzer | TBD | GPIO TBD | — |
-| Red LED button | TBD | LED GPIO TBD + button GPIO TBD | — |
-| LED bar | TBD | Data GPIO TBD + clock GPIO TBD | — |
-| LCD | I2C connector TBD | Shared I2C bus | Expected `0x3E`, unverified |
-| Accelerometer | I2C connector TBD | Shared I2C bus | Expected `0x4C`, unverified |
+| Soil moisture | A0 | ADC channel 0 | HAT ADC `0x08`, verified |
+| Water | A2 | ADC channel 2 | Via HAT ADC |
+| Temperature/humidity | D5 | GPIO 5 | Not I2C for the expected DHT11 variant |
+| Buzzer | D16 | GPIO 16 | — |
+| Red LED button | D24 | LED GPIO 24 + button GPIO 25 | — |
+| LED bar | D22 | Data GPIO 22 + clock GPIO 23 | — |
+| LCD | Any I2C connector | Shared I2C bus | Expected `0x3E`, unverified |
+| Accelerometer | Another I2C connector | Shared I2C bus | Expected `0x4C`, unverified |
 
 Account for both signal wires on the LED bar and button connector. Do not assume
 adjacent port labels represent independent, unused GPIOs: check the HAT pinout.
@@ -94,7 +98,7 @@ experimental inclination estimate after calibration, not a certified slope measu
 
 ## Next validation order
 
-1. Record current connections, or agree a non-conflicting port map before wiring.
+1. Wire the assigned plan with power disconnected, then confirm actual connections.
 2. Test soil moisture and water readings independently; record raw values and units.
 3. Verify LCD and accelerometer I2C addresses after connection, then test each.
 4. Test the button, integrated LED, buzzer and LED bar individually with cleanup.
@@ -103,8 +107,9 @@ experimental inclination estimate after calibration, not a certified slope measu
    explicitly rather than substituting weather data as if it came from the sensor.
 6. Record soil/water/angle calibration and proceed with Sprint 1 of the roadmap.
 
-No module tests, GPIO activation, driver installation or wiring changes were
-performed while recording this inventory.
+The inventory work itself did not activate hardware. On 19 November a separate
+project `.venv`, optional DHT dependency and calibration app were added. Their
+software verification does not imply any physical module test or completed calibration.
 
 ## Manufacturer references
 

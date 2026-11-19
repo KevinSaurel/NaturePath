@@ -7,7 +7,8 @@ IoT group project 2026–2027 · University of Deusto.
 
 ## Project status
 
-The repository is ready for development. The MVP has not been implemented yet.
+A local visual calibration workbench is implemented. The complete MVP is still in development;
+physical module validation and calibration are pending.
 The proposal uses a Raspberry Pi 5, Grove sensors, Python, Flask, and SQLite.
 The experimental classification will report `good`, `caution`, or `poor`, with
 `unavailable` used when sensor data cannot be trusted or obtained.
@@ -23,7 +24,8 @@ python3 scripts/check_environment.py
 ```
 
 The diagnostic does not read sensors or activate outputs. Detecting Python modules
-does not validate the wiring. No server or automatic hardware acquisition is included yet.
+does not validate the wiring. The separate calibration workbench acquires hardware only after an explicit start.
+The final monitoring API and autonomous MVP services are not implemented yet.
 
 To create a separate environment (requires network access):
 
@@ -36,6 +38,20 @@ python -m pip install -r requirements.txt
 Configure Grove separately following the [hardware guide](docs/hardware.md).
 Do not install the legacy `RPi.GPIO` package on the Pi 5.
 The shared `~/grove_env` environment does not need to be modified.
+
+## Visual calibration
+
+The port map, setup and physical capture procedure are in the
+[calibration guide](docs/calibration.md). On the prepared Pi:
+
+```bash
+cd ~/NaturePath
+bash scripts/run_calibration.sh
+```
+
+Open `http://127.0.0.1:5050`. Acquisition starts only after clicking **Iniciar lecturas**.
+The page provides raw readings, labelled batches, reference profiles, CSV/JSON exports
+and bounded output tests. `--simulate` explicitly selects a separate demo without hardware.
 
 ## Implementation roadmap
 

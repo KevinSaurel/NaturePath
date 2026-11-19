@@ -1,4 +1,4 @@
-# Dependencia prevista para el MVP; 3.1.3 está instalada en ~/grove_env.
-Flask==3.1.3
-# SQLite pertenece a la biblioteca estándar de Python.
-# Grove se instala por separado, adaptado al hardware; ver docs/hardware.md.
+# Install runtime dependencies and the local package from pyproject.toml.
+-e .
+# Optional ambient-sensor driver: python -m pip install -e '.[dht]'
+# The Pi 5 GPIO backend comes from the system lab setup; see docs/calibration.md.

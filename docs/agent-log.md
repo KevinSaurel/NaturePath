@@ -176,3 +176,50 @@ clean working-tree state are checked after push, without claiming them in advanc
 remain pending. Next session starts with current connections or an agreed port map,
 especially the two-signal LED bar and LED button. Preserve the known uncertainties
 about driver identities, keyboard behaviour, credential revocation, location and deadline.
+
+## 2026-11-19 UTC — Codex — visual hardware calibration workbench
+
+**Commit subject:** `feat: add local visual Grove calibration workbench`
+
+**What:** Added the local Flask calibration app, lazy real/simulated hardware
+adapters, Spanish HTML/CSS/JS interface, source packaging, isolated project venv,
+launcher, 13 automated tests and a physical calibration guide. Assigned moisture
+A0, water A2, expected DHT11 D5, buzzer D16, LED bar D22 (22/23), red LED button
+D24 (24/25), LCD and accelerometer to shared-bus I2C connectors. Updated the README,
+hardware/context/roadmap, test notes and 19 November session record.
+
+**Why:** The user confirmed all modules were disconnected and requested a port
+assignment and visual calibration programs. The tool turns stable real observations
+into reviewable references instead of guessing thresholds from lab examples.
+
+**Decisions / assumptions:** Physical wiring and exact chip identities remain
+unverified. Start the page disarmed and require explicit acquisition/output actions.
+Use one acquisition worker, independent per-sensor errors, bounded output tests,
+GPIO/I2C cleanup and a process lock for this tool. Simulation is explicit, visibly
+labelled, stored separately and never a fallback. Derive cutoffs only from separate
+observed ranges, keep partial profiles explicit, and use an immobile mean gravity
+vector for zero; known-angle captures are validation evidence, not a fitted scale.
+DHT polling is spaced by at least three seconds, even after failure.
+
+**Validation:** 13 unittest checks passed, including overlap/polarity, moving-zero
+rejection, cleanup after DHT failure, capture failure/cancellation, persistence,
+mode isolation, cached observation counting and HTTP input/command guards.
+Python compilation, launcher syntax, Markdown links, whitespace and token-pattern
+checks passed. Built a wheel and verified the HTML/CSS/JS are included. System
+Chromium/Playwright completed two simulated water captures, reference calculation,
+a simulated output action and stop; no JavaScript errors or mobile overflow.
+A final UI check confirmed Spanish profile messages. The real-mode launcher served
+HTTP 200 with acquisition disarmed and no readings. Preview processes were stopped.
+The isolated install reported an unrelated inherited types-flask-migrate dependency
+warning; required imports and application checks passed. The shared lab venv was
+not modified. The server restarted during development; saved state was checked
+before resuming rather than repeating the completed install.
+
+**Limitations / next:** No physical sensor read, GPIO activation, wiring change or
+real calibration was performed by this task. The user must connect with power off,
+confirm the map and observe individual tests. Start with dry/damp/wet soil and
+dry/wet water batches, then level/known-angle checks; verify real DHT11 reliability
+and output mapping. The final trail classifier, monitoring API/dashboard, weather
+and autonomous MVP services are still pending. This app remains a local calibration
+server, not a cloud-hosted Site or production deployment. Check Git refs after push
+for publication state; do not infer publication from this pre-push record.

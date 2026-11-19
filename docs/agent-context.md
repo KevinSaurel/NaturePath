@@ -1,10 +1,11 @@
 # Current agent handoff context
 
-Last updated: 12 November 2026 (UTC).
+Last updated: 19 November 2026 (UTC).
 
-Session closed at the user's request; continue on a later day. Read the
-[session summary](sessions/2026-11-12.md) before resuming. No further hardware
-activity or implementation is scheduled from this session.
+The user resumed preparation on 19 November. Modules were reported disconnected;
+a port map and local visual calibration tool are now implemented. See the
+[19 November session record](sessions/2026-11-19.md) for this work. The previous
+[session summary](sessions/2026-11-12.md) is historical, not a current stop request.
 
 ## Project and accepted scope
 
@@ -46,14 +47,26 @@ and conversation may contain credentials; document only relevant project context
 - `~/grove_env/bin/python ~/lab4/check_setup.py` passed on 12 November 2026:
   Pi 5 GPIO backend available, HAT ADC responds at `0x08`, installed Grove default matches.
 - The project environment diagnostic runs with system Python and `grove_env`.
+- Calibration software: 13 unit/integration tests pass without hardware. System
+  Chromium/Playwright completed simulated start/stop, two water captures, reference
+  calculation, simulated output and desktop/mobile checks without JavaScript errors.
+  These results establish software behaviour, not real sensor compatibility.
 - Open-Meteo returned HTTP 200 from the Pi without an API key for Bilbao weather
   and hourly precipitation/probability fields. It is the Lab 5 provider.
 - Initial repository, English README and roadmap were pushed and verified against
   `origin/main`. Later agents must recheck live Git state rather than assume it.
 
-Application functionality is still pending: no project sensor acquisition,
-classification engine, actuator control, API server, persistence or dashboard has
-been implemented. No individual NaturePath sensor or actuator has been validated.
+The local calibration tool is now implemented in `naturepath.calibration`, with
+lazy hardware adapters, raw readings, labelled batches, partial/reference profiles,
+CSV/JSON exports and bounded actuator tests. The isolated project `.venv` contains
+Flask, smbus2 and the optional Adafruit DHT driver; the lab venv was not modified.
+Use `bash scripts/run_calibration.sh` and the Pi browser at `http://127.0.0.1:5050`.
+It starts disarmed until the page's start action. `--simulate` is explicit and
+stores data separately. See [calibration.md](calibration.md).
+
+No individual physical NaturePath module or real calibration has been validated.
+The final trail classifier, monitoring/history API, weather integration and
+systemd MVP services remain pending. The calibration API is not the final MVP API.
 
 ## Decisions to preserve
 
@@ -76,14 +89,18 @@ been implemented. No individual NaturePath sensor or actuator has been validated
 
 ## Pending inputs and next implementation step
 
-The user is preparing before coding. All eight module names/revisions have been
-provided and recorded in `docs/hardware.md`. Next obtain current connections or
-agree a conflict-free port map, confirm inferred chip identities and the monitored
-location, and arrange physical calibration observations. The accelerometer needs a fixed orientation/reference.
-Follow Sprint 1 of the roadmap: test modules individually, record calibration,
-then build real soil-moisture acquisition and a minimal status API. Software
-interfaces/test fixtures can be prepared while physical information is collected.
-No production thresholds or wiring should be guessed.
+The user reports all modules are disconnected. Assigned map: moisture A0, water
+A2, expected DHT11 D5, buzzer D16, LED bar D22 (data 22/clock 23), red LED button
+D24 (LED 24/input 25), LCD and accelerometer on separate shared-bus I2C sockets.
+The user must wire with power off, then confirm connections. No real acquisitions
+or output tests were automatically started during software verification.
+
+Next: start the calibration page, verify modules individually, collect soil
+references (dry/damp/wet), water references (dry/wet), and an immobile level vector
+plus known-angle checks. Confirm ambient chip identity and timing reliability.
+The tool rejects overlapping reference ranges and keeps captures/errors explicit.
+Confirm monitored location and implementation deadline when available. Real
+physical evidence is required before treating a profile as validated.
 
 ## Operational history and limitations
 
