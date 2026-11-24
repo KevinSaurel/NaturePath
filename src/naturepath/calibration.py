@@ -145,12 +145,11 @@ class Workbench:
             self.thread = threading.Thread(target=self._run, daemon=True)
             self.thread.start()
 
-    def stop(self):
+    def stop(self, timeout=2):
         self.stop_event.set()
         if self.thread:
-            self.thread.join(timeout=8)
-        if self.thread and self.thread.is_alive():
-            raise ValueError('Still stopping; wait for the active hardware operation to finish')
+            self.thread.join(timeout=timeout)
+        return not (self.thread and self.thread.is_alive())
 
     def _run(self):
         lockfile = None
@@ -234,7 +233,7 @@ class Workbench:
 
     def begin_capture(self, sensor=None, label=None, target=20, notes='', known_angle=None):
         with self.lock:
-            if not self.running or self.latest_at is None or time.time()-self.latest_at > 4:
+            if not self.running or self.stop_event.is_set() or self.latest_at is None or time.time()-self.latest_at > 4:
                 raise ValueError('Start acquisition and wait for fresh readings first')
             if not isinstance(sensor, str) or sensor not in LABELS or not isinstance(label, str) or label not in LABELS[sensor]:
                 raise ValueError('Invalid sensor or reference label')
@@ -262,7 +261,7 @@ class Workbench:
 
     def enqueue(self, name, value):
         with self.lock:
-            if not self.running or self.latest_at is None or time.time() - self.latest_at > 4:
+            if not self.running or self.stop_event.is_set() or self.latest_at is None or time.time() - self.latest_at > 4:
                 raise ValueError('Start acquisition and wait for fresh readings first')
             if self.capture and self.capture['state'] == 'collecting':
                 raise ValueError('Finish or cancel the capture before testing outputs or changing references')
@@ -286,7 +285,8 @@ class Workbench:
             capture = None if not self.capture else {k: v for k, v in self.capture.items() if k != 'samples'}
             if capture:
                 capture['collected'] = len(self.capture['samples'])
-            return copy.deepcopy({'mode': self.mode, 'running': self.running, 'error': self.error,
+            return copy.deepcopy({'mode': self.mode, 'running': self.running,
+                                  'stopping': self.running and self.stop_event.is_set(), 'error': self.error,
                                   'readings': self.latest, 'latest_at': self.latest_at,
                                   'capture': capture, 'last_action': self.last_action, 'profile': self.profile,
                                   'history': self.history,
@@ -329,8 +329,8 @@ def create_app(workbench):
 
     @app.post('/api/stop')
     def stop():
-        workbench.stop()
-        return jsonify(ok=True)
+        stopped = workbench.stop(timeout=0.1)
+        return jsonify(ok=stopped, stopping=not stopped), 200 if stopped else 202
 
     @app.post('/api/capture')
     def capture():

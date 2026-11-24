@@ -1,5 +1,9 @@
 """Contract, persistence and failure-path checks; never touch physical GPIO."""
 import json
+import os
+import sys
+import threading
+from types import SimpleNamespace
 import re
 import tempfile
 import time
@@ -8,7 +12,7 @@ from pathlib import Path
 
 from naturepath.calibration import Workbench, build_profile, create_app, summarise
 from naturepath.hardware import Hardware, SimulatedHardware, WIRING, signed_axis, tilt_degrees
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 
 def reference(sensor, label, values, mode='hardware'):
@@ -47,6 +51,19 @@ class ReferencesTest(unittest.TestCase):
         result = build_profile([record], 'hardware')
         self.assertNotIn('accelerometer', result['sensors'])
         self.assertTrue(any('moved' in item for item in result['pending']))
+
+    def test_dht_import_disables_interactive_dependency_installation(self):
+        device = Hardware.__new__(Hardware)
+        device.env_last, device.env_result, device.dht = 0, None, None
+        def construct(*args, **kwargs):
+            self.assertEqual(os.environ['BLINKA_SKIP_DEPENDENCY_CHECK'], '1')
+            return SimpleNamespace(temperature=26.2, humidity=38)
+        modules = {'board': SimpleNamespace(D5=5),
+                   'adafruit_dht': SimpleNamespace(DHT11=construct)}
+        with patch.dict(os.environ, {'BLINKA_SKIP_DEPENDENCY_CHECK': '0'}), patch.dict(sys.modules, modules):
+            result = device._environment()
+            self.assertEqual(result['temperature_c'], 26.2)
+            self.assertEqual(result['humidity_pct'], 38)
 
     def test_cleanup_continues_after_dht_failure(self):
         device = Hardware.__new__(Hardware)
@@ -157,6 +174,33 @@ class WorkbenchTest(unittest.TestCase):
             self.assertEqual(response.status_code, 400, response.get_data(as_text=True))
         self.assertEqual(self.post('/api/simulation', {'water': 99999}).status_code, 400)
         self.assertEqual(self.post('/api/output/unknown').status_code, 400)
+
+    def test_stop_returns_accepted_while_read_finishes_then_is_idempotent(self):
+        entered, release = threading.Event(), threading.Event()
+        class SlowHardware(SimulatedHardware):
+            def read(self):
+                entered.set()
+                release.wait(timeout=5)
+                return super().read()
+        bench = Workbench(self.temp.name, simulate=True, factory=SlowHardware)
+        client = create_app(bench).test_client()
+        html = client.get('/').get_data(as_text=True)
+        token = re.search('name="naturepath-token" content="([^\"]+)"', html).group(1)
+        headers = {'X-NaturePath-Token': token}
+        try:
+            client.post('/api/start', headers=headers)
+            self.assertTrue(entered.wait(timeout=1))
+            response = client.post('/api/stop', headers=headers)
+            self.assertEqual(response.status_code, 202)
+            self.assertTrue(response.get_json()['stopping'])
+            self.assertTrue(client.get('/api/state').get_json()['stopping'])
+            release.set()
+            self.wait(lambda: not bench.state()['running'])
+            self.assertEqual(client.post('/api/stop', headers=headers).status_code, 200)
+            self.assertFalse(bench.state()['stopping'])
+        finally:
+            release.set()
+            bench.stop()
 
     def test_missing_hardware_reports_error_without_simulation_fallback(self):
         def unavailable():

@@ -72,6 +72,18 @@ Use **Detener** before exiting and Ctrl+C to stop the server. Outputs are bounde
 and released on normal shutdown. Before moving cables, shut down and remove power.
 No systemd service is installed and the tool does not start automatically at boot.
 
+## Runtime configuration
+
+No `.env` file or user-defined environment variables are required by this tool.
+Wiring is currently a Python constant and host/port/data directory/simulation are
+CLI options. The DHT adapter internally sets `BLINKA_SKIP_DEPENDENCY_CHECK=1`
+before importing Blinka-dependent modules to prevent interactive dependency
+installation from blocking the worker. The Python `.venv` is a separate concept.
+
+`POST /api/stop` returns 200 when stopped or 202 when shutdown is pending; poll
+`/api/state` for `stopping`/`running`. The frontend displays the stopping state.
+Refresh the page after a server restart to obtain the new page command token.
+
 ## Procedure
 
 ### 1. Confirm operation before capturing

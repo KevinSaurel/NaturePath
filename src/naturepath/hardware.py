@@ -1,5 +1,6 @@
 """Explicit, lazy hardware access for the agreed Grove Base HAT wiring."""
 import math
+import os
 import random
 import time
 
@@ -44,6 +45,7 @@ class Hardware:
         self.dht = None
         self.env_last = 0
         self.env_result = None
+        self.env_error = None
         self.reference = (0, 0, 1)
 
     def _gpio(self):
@@ -92,17 +94,26 @@ class Hardware:
         if time.monotonic() - self.env_last < 3:
             if self.env_result:
                 return self.env_result
-            raise RuntimeError('DHT11 unavailable; waiting before the next read attempt')
+            raise RuntimeError(self.env_error or 'DHT11 unavailable; waiting before the next read attempt')
         self.env_last = time.monotonic()
-        if self.dht is None:
-            import adafruit_dht
-            import board
-            self.dht = adafruit_dht.DHT11(board.D5, use_pulseio=False)
-        temperature, humidity = self.dht.temperature, self.dht.humidity
-        if temperature is None or humidity is None:
-            raise ValueError('DHT11 returned no measurement')
-        if not 0 <= temperature <= 50 or not 0 <= humidity <= 100:
-            raise ValueError('Ambient reading outside expected DHT11 range')
+        try:
+            if self.dht is None:
+                # Runtime imports must never prompt or install optional PWM/NeoPixel
+                # backends inside a sensor worker attached to the user's terminal.
+                os.environ['BLINKA_SKIP_DEPENDENCY_CHECK'] = '1'
+                import adafruit_dht
+                import board
+                self.dht = adafruit_dht.DHT11(board.D5, use_pulseio=False)
+            temperature, humidity = self.dht.temperature, self.dht.humidity
+            if temperature is None or humidity is None:
+                raise ValueError('DHT11 returned no measurement')
+            if not 0 <= temperature <= 50 or not 0 <= humidity <= 100:
+                raise ValueError('Ambient reading outside expected DHT11 range')
+        except Exception as exc:
+            self.env_result = None
+            self.env_error = str(exc)
+            raise
+        self.env_error = None
         self.env_result = {'temperature_c': temperature, 'humidity_pct': humidity,
                            'measured_at': time.time()}
         return self.env_result

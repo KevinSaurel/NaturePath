@@ -1,8 +1,8 @@
 # Current agent handoff context
 
-Last updated: 19 November 2026 (UTC).
+Last updated: 24 November 2026 (UTC).
 
-The user resumed preparation on 19 November. Modules were reported disconnected;
+The user resumed preparation on 19 November, initially with modules disconnected;
 a port map and local visual calibration tool are now implemented. See the
 [19 November session record](sessions/2026-11-19.md) for this work. The previous
 [session summary](sessions/2026-11-12.md) is historical, not a current stop request.
@@ -23,7 +23,8 @@ and a visitor button. The experimental index uses `good`, `caution`, `poor` and
 `unavailable`. Keep the primary visitor experience physical; the dashboard is for
 monitoring. All required hardware is available according to the user. The reported
 board labels/revisions are now recorded in `docs/hardware.md`; connections,
-chip identification where inferred, operation and calibration remain unverified.
+chip identification where inferred and calibration remain unverified. Later that
+day, real readings and user-observed output checks were obtained as noted below.
 
 ## Repository and reference material
 
@@ -64,7 +65,25 @@ Use `bash scripts/run_calibration.sh` and the Pi browser at `http://127.0.0.1:50
 It starts disarmed until the page's start action. `--simulate` is explicit and
 stores data separately. See [calibration.md](calibration.md).
 
-No individual physical NaturePath module or real calibration has been validated.
+On 19 November the user connected the modules and authorised manual API checks.
+I2C scanning detected `0x08`, `0x3E` and `0x4C`. Real accelerometer, ambient and water
+channel readings arrived. Soil A0 stayed at raw 0 / 0 mV; wet/dry response is still
+unverified. The user confirmed LCD text, buzzer, button LED and LED bar physically.
+The button input was read as unpressed but a press transition was not observed.
+Ambient readings arrived with intermittent DHT failures. No real calibration
+references or complete profiles were produced.
+
+The initial acquisition hang and HTTP 400 on stop were traced to Blinka's interactive
+optional-dependency prompt during the DHT import. The driver now sets
+`BLINKA_SKIP_DEPENDENCY_CHECK=1` internally before that import; no user `.env` is
+required. Stop responds 200 when complete or 202 while a read is finishing, with
+an explicit frontend stopping state. Fifteen tests passed on 19 November, including
+two regressions; real browser start/stop/restart also passed. These corrections
+were left uncommitted at the interruption and documented/committed on 24 November.
+
+The user explicitly stopped testing on 19 November. Acquisition was confirmed
+stopped then, with the page still served. Do not resume physical tests until the
+user requests it. No hardware activity was performed for the 24 November question.
 The final trail classifier, monitoring/history API, weather integration and
 systemd MVP services remain pending. The calibration API is not the final MVP API.
 
@@ -89,13 +108,12 @@ systemd MVP services remain pending. The calibration API is not the final MVP AP
 
 ## Pending inputs and next implementation step
 
-The user reports all modules are disconnected. Assigned map: moisture A0, water
+The user later confirmed all modules were connected. Assigned map: moisture A0, water
 A2, expected DHT11 D5, buzzer D16, LED bar D22 (data 22/clock 23), red LED button
 D24 (LED 24/input 25), LCD and accelerometer on separate shared-bus I2C sockets.
-The user must wire with power off, then confirm connections. No real acquisitions
-or output tests were automatically started during software verification.
+Initial wiring and tests are recorded above. Any later rewiring requires power off.
 
-Next: start the calibration page, verify modules individually, collect soil
+When the user resumes tests: verify soil response and button input, then collect soil
 references (dry/damp/wet), water references (dry/wet), and an immobile level vector
 plus known-angle checks. Confirm ambient chip identity and timing reliability.
 The tool rejects overlapping reference ranges and keeps captures/errors explicit.
