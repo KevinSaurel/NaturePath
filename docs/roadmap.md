@@ -1,12 +1,30 @@
 # NaturePath implementation roadmap
 
-> 19 November update: the [local calibration workbench](calibration.md) and a
-> non-conflicting wiring plan are implemented. Real wiring, module tests and
-> calibration captures remain pending; the rest of the MVP below is still planned.
+26 November 2026 coordination update: the live
+[GitHub issues](https://github.com/KevinSaurel/NaturePath/issues) and their official
+milestones now provide the team schedule. This explicitly corrects the earlier
+local assumption that the delivery date was unconfirmed. Issue/Project state must
+be reread before each task and commit; this document is not a live board mirror.
 
-Planning baseline: 12 November 2026. Build the complete MVP first; extend it only
-when there is a demonstrated need. This roadmap supersedes the initial task list
-in [backlog.md](backlog.md).
+| Official milestone | Dates recorded in GitHub | Coordination outcome |
+| --- | --- | --- |
+| Sprint 1 | 3–17 November 2026 | Repository, backlog, architecture and hardware checks |
+| Sprint 2 | 17 November–3 December 2026 | Real sensing → storage → visualisation; live review on 3 December ([#13](https://github.com/KevinSaurel/NaturePath/issues/13)) |
+| Sprint 3 | 3–11 December 2026 | Complete MVP, documentation and tagged submission ([#22](https://github.com/KevinSaurel/NaturePath/issues/22)) |
+
+Issue #22 records a 15-minute live demonstration during the week of 14 December.
+These dates are verified against GitHub's current plan, not independently against
+an additional assessment brief. The earlier four technical stages below are
+**implementation increments**, not the three official sprints.
+
+The calibration workbench and capture deletion are implemented. Real accelerometer,
+ambient and water readings and user-observed output checks were obtained on
+19 November; soil response, button press transition and real calibration still
+need the evidence described in [agent-context.md](agent-context.md).
+
+Planning baseline: 12 November 2026, reconciled with GitHub on 26 November.
+Build the complete MVP first; extend it according to the current issue priorities.
+This roadmap supersedes the initial task list in [backlog.md](backlog.md).
 
 ## Outcome and scope
 
@@ -30,19 +48,24 @@ modules have been connected, calibrated or tested.
 The submitted proposal's minimum acceptance criteria remain the baseline. Water,
 ambient sensing and inclination extend the original moisture-first MVP using the
 hardware now available. Open-Meteo adds forecast context. LoRaWAN, solar power,
-multi-node infrastructure, cloud platforms, MQTT and learned anomaly detectors
-are later extensions, unless a new implementation rubric explicitly requires them.
+multi-node infrastructure, cloud platforms and learned anomaly detectors remain
+extensions. Local MQTT is now explicitly planned as P1 Sprint 3 work in
+[#17](https://github.com/KevinSaurel/NaturePath/issues/17), after the core vertical
+slice. This corrects its earlier blanket classification as an unplanned extension.
 
 ## What has actually been verified
 
-- Repository scaffold and proposal are on GitHub; application implementation is pending.
+- Repository scaffold, proposal and initial calibration workbench are on GitHub;
+  later local fixes/deletion are separate commits. Check live refs for publication.
 - Raspberry Pi 5, Python 3.13.5 and the existing `~/grove_env` are available.
 - The Lab 4 `check_setup.py` passes: Grove imports, the Pi 5 GPIO backend is
   available, the HAT answers at `0x08`, and the installed ADC default matches it.
 - Open-Meteo returns HTTP 200 without authentication for Bilbao coordinates,
   including current conditions and hourly precipitation/probability fields.
-- Individual project sensors, their wiring, LCD and other actuators have not yet
-  been tested as part of NaturePath.
+- Initial real reads and user-observed outputs are recorded in agent context.
+  GitHub issue #6 is closed; the local record still lacks a button press transition
+  and soil wet/dry response. Keep that evidence gap explicit; do not infer physical
+  behaviour solely from the issue being marked Done.
 
 ## Alignment with the labs
 
@@ -67,11 +90,15 @@ record without changing the hardware layer.
 
 ## Delivery order
 
-The four sprints are ordered increments, not calendar commitments. Confirm the
-implementation deadline before assigning dates; the supplied October dates refer
-to the proposal and its presentation, not a newly established prototype deadline.
+The four increments group technical work; schedule and prioritise it using the
+three official GitHub milestones above. Current Sprint 2 work includes real
+calibration [#7](https://github.com/KevinSaurel/NaturePath/issues/7) and acquisition
+[#8](https://github.com/KevinSaurel/NaturePath/issues/8), then classification #9,
+persistence/API #10, dashboard #11 and visitor feedback #12 for review #13.
+The capture-deletion commit `5558231` supports #7 without completing its physical
+acceptance criteria. The initial workbench issue #4 is already closed.
 
-### Sprint 1 — Real sensing and the first complete software path
+### Increment 1 — Real sensing and the first complete software path
 
 1. Record exact models, port labels, I2C addresses and button polarity in
    [hardware.md](hardware.md). Distinguish BCM GPIO numbers from physical header pins.
@@ -96,7 +123,7 @@ sensor has a recorded individual test, and invalid mandatory data yields
 **Human input needed:** models and wiring, physical module tests and calibration samples.
 **Coding work:** configuration, adapters, sample model, initial rules and minimal API.
 
-### Sprint 2 — Condition analysis and visitor feedback
+### Increment 2 — Condition analysis and visitor feedback
 
 1. Add calibrated moisture and water rules, ambient context and inclination.
    Decide how combined conditions escalate the result using measured scenarios.
@@ -121,7 +148,7 @@ sensor failure and recovery. No final numeric threshold is invented without data
 that LCD text, LED and buzzer are understandable.
 **Coding work:** sensor fusion, decision reasons, stability rules and actuator control.
 
-### Sprint 3 — Persistence, weather and monitoring
+### Increment 3 — Persistence, weather and monitoring
 
 1. Store measurements, condition, quality, reasons, UTC timestamps and calibration
    version in SQLite. Define bounded retention and CSV export for evidence.
@@ -146,7 +173,7 @@ A weather timeout does not block local sensing or indicators.
 **Human input needed:** monitored location/coordinates and access to a second device on the LAN.
 **Coding work:** storage, REST contract, weather client/cache and dashboard.
 
-### Sprint 4 — Autonomous operation, validation and demonstration
+### Increment 4 — Autonomous operation, validation and demonstration
 
 1. Package reproducible installation and configuration instructions for this Pi.
 2. Run acquisition and web serving under systemd with the correct venv, working
@@ -202,7 +229,7 @@ sample or browser request. Forecast data is context, not ground truth at the tra
 | Location | One monitored location and coordinates; confirm Bilbao defaults if suitable | Ensures the forecast represents the intended area |
 | Network/demo | Pi and laptop on a reachable LAN and a stable power supply | Allows HTTP demonstration and reboot tests |
 | UX validation | Check LCD messages, button response and LED/buzzer patterns with users | Validates the nature-first, inclusive value proposition |
-| Delivery | Confirm final implementation deadline and any additional prototype rubric | Sets dates and determines whether extensions are necessary |
+| Delivery | Follow the GitHub milestones (review 3 December; submission 11 December); confirm actual group number and final brief details in #22 | Aligns implementation, evidence and submission |
 
 No weather account, cloud subscription or extra hardware purchase is needed to
 start. The team performs physical wiring and observations; software work can begin
@@ -223,7 +250,8 @@ Interfaces should let storage and publishers consume the same validated readings
 Keep sensor access, classification and transport separate without introducing a
 cloud dependency into the local feedback loop.
 
-After MVP acceptance, consider these independently:
+After the core vertical slice, follow the live issue priorities. Local MQTT is
+already scheduled as P1 in Sprint 3; the other extensions need a demonstrated need:
 
 1. **MQTT:** publish measurements and health from an adapter; use a local broker
    for campus demonstrations. Lab 5 warns that outbound MQTT ports can be blocked

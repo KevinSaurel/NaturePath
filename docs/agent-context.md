@@ -14,9 +14,14 @@ Kevin Saurel and Ruben Alonso. It provides inclusive trail-condition guidance vi
 sensing, analysis and physical feedback. It is not a safety/accessibility guarantee.
 
 The user confirmed: implement the complete MVP first and scale only if needed.
-The supplied assessment text concerns the proposal and permits a local server;
-it does not establish MQTT, cloud platforms or Edge AI as mandatory MVP features.
-Its October dates are proposal dates. The implementation deadline is not confirmed.
+The supplied proposal assessment permits a local server and does not itself make
+MQTT, cloud platforms or Edge AI mandatory. On 26 November the live GitHub issues
+established the current team plan: Sprint 2 review on 3 December, final submission
+by 11 December and a live demo during the week of 14 December. These dates come
+from GitHub milestones/issues #13/#22, not an independently checked final brief.
+Local MQTT is now a planned P1 Sprint 3 issue (#17), after the core vertical slice.
+This explicitly corrects the previous unconfirmed-date and blanket MQTT-extension
+assumptions; cloud platforms and trained models are still extensions.
 
 Target: Raspberry Pi 5 + Grove sensors + Python + Flask + SQLite; LCD, LED, buzzer
 and a visitor button. The experimental index uses `good`, `caution`, `poor` and
@@ -29,7 +34,8 @@ day, real readings and user-observed output checks were obtained as noted below.
 ## Repository and reference material
 
 - Local repository: `/home/hugokevinruben/NaturePath`.
-- GitHub: https://github.com/KevinSaurel/NaturePath; HTTPS remote, branch `main`.
+- GitHub: https://github.com/KevinSaurel/NaturePath; HTTPS remote, default branch `main`.
+  Work on task branches; this workflow update uses `docs/github-project-workflow`.
 - Account used for successful pushes: `hugoArenaza-deusto` (different from owner).
 - Original proposal: `docs/challengeIoT_groupXX-1.pdf`; searchable text in `docs/challenge.md`.
 - Lab archive: `~/IoT_labs_y_proyecto_contexto.zip`; Labs 1, 3, 4, 5, 6 and proposal.
@@ -40,6 +46,37 @@ day, real readings and user-observed output checks were obtained as noted below.
 
 Do not upload the raw lab archive or a verbatim chat transcript. Teaching materials
 and conversation may contain credentials; document only relevant project context.
+
+## GitHub coordination (26 November 2026 snapshot)
+
+The user requires checking the related issues and configured Project before
+committing. This is now part of root `AGENTS.md`; see the operational commands in
+[git-setup.md](git-setup.md#current-issue-and-project-workflow). Recheck live data
+before each task/commit rather than treating this snapshot as authoritative.
+
+- All 22 issues were retrieved via the GitHub connector. Issues #1–#6 are closed;
+  #7 (real calibration) and #8 (acquisition) are open with issue status
+  `In progress`; #9–#22 are open with issue status `Todo`. Project custom field
+  values and Project URL/owner/number remain unverified until Project access works.
+- Official milestone dates: Sprint 1, 3–17 November; Sprint 2, 17 November–3 December;
+  Sprint 3, 3–11 December. The four local roadmap stages are implementation
+  increments, not official sprints. Issue #13 requires a real sensor → storage →
+  visualisation review; #22 covers final release/ALUD submission and the live demo.
+- The deletion commit `5558231` supports #7 (Kevin and Hugo assigned), and extends
+  the workbench originally tracked by closed #4. It does not complete #7, whose
+  criteria still require real labelled captures, repeatability and exported profiles.
+  This follow-up documents that relationship without rewriting earlier commits.
+- Issue #6 is marked Done in GitHub, while local physical evidence still lacks
+  soil wet/dry response and a button press transition. Preserve that distinction;
+  task state alone does not validate hardware. No remote issue was changed.
+- `gh` 2.46.0 was installed from Debian's arm64 package at `~/.local/bin/gh`.
+  System installation required an unavailable sudo password, so the approved
+  user-local installation was used. No CLI login or GitHub environment credential
+  existed at the check. The user was asked to authenticate interactively with
+  Project read access; do not ask for or print tokens. Connector login is separate.
+- GitHub `main` was read at `f890da4` during this check; local `ec4679a` and
+  `5558231` were not present there. Do not assume they were pushed. No push,
+  PR, review, issue transition or Project edit was performed by this update.
 
 ## Verified state
 
@@ -117,7 +154,8 @@ systemd MVP services remain pending. The calibration API is not the final MVP AP
   owns GPIO; HTTP requests/reloaders must not start additional acquisition loops.
 - A failed mandatory sensor must not yield `good`; loss of optional weather context
   should be exposed without disabling valid local feedback.
-- MQTT/platforms, trained anomaly detection and distributed outdoor nodes are extensions.
+- Local MQTT is P1 Sprint 3 work in GitHub #17, after the core flow. Cloud
+  platforms, trained anomaly detection and distributed outdoor nodes remain extensions.
 
 ## Pending inputs and next implementation step
 
@@ -130,8 +168,10 @@ When the user resumes tests: verify soil response and button input, then collect
 references (dry/damp/wet), water references (dry/wet), and an immobile level vector
 plus known-angle checks. Confirm ambient chip identity and timing reliability.
 The tool rejects overlapping reference ranges and keeps captures/errors explicit.
-Confirm monitored location and implementation deadline when available. Real
-physical evidence is required before treating a profile as validated.
+Confirm the monitored location and remaining submission details; use the official
+GitHub milestone dates above for scheduling. Real physical evidence is required
+before treating a profile as validated. Acquisition #8 can proceed independently
+of soil samples, as the current #7/#8 implementation guides explicitly state.
 
 ## Operational history and limitations
 

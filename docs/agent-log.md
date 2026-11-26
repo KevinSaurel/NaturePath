@@ -263,3 +263,58 @@ calibration server and reload its page to use the updated code. Real soil/button
 verification, physical reference collection and remaining MVP work are still
 pending; no hardware validation is claimed. This commit is local; no push was
 requested or performed.
+
+## 2026-11-26 UTC — Codex — GitHub issue and Project coordination
+
+**Commit subject:** `docs: align agent workflow with GitHub issues and milestones`
+
+**Issue references:** `Refs #5, #7`. This is a follow-up to closed tracking issue
+#5, and documents that capture deletion in `5558231` supports still-open #7.
+Neither reference claims completion of outstanding physical calibration.
+
+**What:** Added live issue/Project checks before work and each logical commit to
+`AGENTS.md`, including acceptance criteria, comments, status, priority,
+dependencies, assignees and official sprint. Documented task branches, issue
+references, evidence/PR review requirements and access-limit reporting in
+`docs/git-setup.md`. Reconciled `docs/agent-context.md` and `docs/roadmap.md` with
+GitHub's three official milestones, 3 December review, 11 December submission,
+week-of-14-December demo and P1 local MQTT task #17. Renamed the old roadmap's four
+stages as implementation increments rather than official sprints. Preserved
+historical records and distinguished issue status from unread Project fields.
+
+**Why / decisions:** The user requested alignment with configured GitHub tracking
+and installation of gh if necessary. Retrieved all 22 issues via the connector,
+reviewed the related issues/acceptance guides, and rechecked #5/#7 and #7 comments
+before committing. Issues #7/#8 remain In progress, #1–#6 are closed, and #9–#22
+are Todo in the issue metadata snapshot. Issue #6's Done state is not additional
+physical evidence for local soil/button uncertainties. Do not close #7 based on
+software-only work. Created local branch `docs/github-project-workflow`; earlier
+commits were not rewritten. No issue, Project item, assignment or milestone was
+changed remotely, and no comment/message was posted.
+
+**CLI setup / access:** gh was absent. The approved system apt installation could
+not proceed because sudo required an unavailable interactive password. Downloaded
+Debian's gh 2.46.0-3 arm64 package and installed its executable with approved
+user-local access at `~/.local/bin/gh`, without changing system packages. The
+executable is on PATH and reports version 2.46.0. CLI auth status reports no login;
+no existing CLI auth configuration or GitHub environment credential was detected.
+The user was asked to authenticate interactively with read:project access. The
+GitHub connector supplies issue reads but no Project v2 read operation, and public
+web reads of the repository/user Project pages failed. Project URL/owner/number,
+custom fields and item status therefore remain unverified; no values were inferred.
+
+**Validation:** `gh --version`, command discovery and issue-view help succeeded;
+`gh auth status` correctly reported missing authentication. Connector reads
+verified all issue metadata, related criteria/comments, milestone dates, no open
+PRs and remote main at `f890da4` during this check. Local commits `ec4679a` and
+`5558231` were not on that remote main snapshot. Checked local Markdown file links,
+reviewed the documentation diff and ran `git diff --check`, all successfully.
+The documented authenticated CLI/Project commands could not be exercised before
+login. Application tests were not rerun for this documentation/setup change; no
+application code or hardware was touched.
+
+**Limitations / next:** Complete interactive gh login, then identify and read the
+actual linked Project, fields and related items; record verified ownership/status
+and any mismatches. Check live refs again before publishing, then use the team's
+PR review flow with issue references. This documentation commit is local; no
+push, PR creation, review or merge was requested or performed.
