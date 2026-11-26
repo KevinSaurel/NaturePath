@@ -120,6 +120,12 @@ class WorkbenchTest(unittest.TestCase):
         self.assertEqual(self.post('/api/start').status_code, 200)
         self.wait(lambda: self.bench.state()['latest_at'] is not None)
 
+    def capture_record(self, sensor='water', label='dry'):
+        self.assertEqual(self.post('/api/capture', {
+            'sensor': sensor, 'label': label, 'target': 10}).status_code, 200)
+        self.wait(lambda: self.bench.state()['capture']['state'] == 'complete')
+        return self.bench.records[-1]
+
     def test_page_is_disarmed_and_commands_require_page_token(self):
         state = self.client.get('/api/state').get_json()
         self.assertFalse(state['running'])
@@ -154,6 +160,88 @@ class WorkbenchTest(unittest.TestCase):
         self.assertIn('water', reloaded.profile['sensors'])
         hardware = Workbench(self.temp.name)
         self.assertIsNone(hardware.profile)
+
+    def test_delete_persists_updates_exports_and_preserves_other_records_and_mode(self):
+        self.start()
+        removed = self.capture_record()
+        kept = self.capture_record('moisture')
+        self.bench.stop()
+        hardware = Workbench(self.temp.name)
+        hardware_path = hardware.directory / f"capture-{removed['id']}.json"
+        hardware_record = {**removed, 'mode': 'hardware'}
+        hardware_path.write_text(json.dumps(hardware_record))
+        path = f"/api/captures/{removed['id']}/delete"
+        self.assertEqual(self.client.post(path).status_code, 403)
+        self.assertTrue((self.bench.directory / f"capture-{removed['id']}.json").exists())
+        self.assertEqual(self.post(path).get_json(), {'ok': True, 'profile_invalidated': False})
+        self.assertFalse((self.bench.directory / f"capture-{removed['id']}.json").exists())
+        self.assertEqual([r['id'] for r in self.client.get('/api/state').get_json()['records']], [kept['id']])
+        self.assertEqual([r['id'] for r in self.client.get('/api/export').get_json()['records']], [kept['id']])
+        csv = self.client.get('/api/export?format=csv').get_data(as_text=True)
+        self.assertNotIn(removed['id'], csv)
+        self.assertIn(kept['id'], csv)
+        self.assertEqual([r['id'] for r in Workbench(self.temp.name, simulate=True).records], [kept['id']])
+        self.assertEqual(Workbench(self.temp.name).records, [hardware_record])
+        self.assertEqual(self.post(path).status_code, 400)
+        self.assertEqual(self.post('/api/captures/unknown/delete').status_code, 400)
+        self.assertEqual(self.post(f"/api/captures/{kept['id']}/delete").status_code, 200)
+        self.assertEqual(self.client.get('/api/export').get_json()['records'], [])
+        self.assertIsNone(self.bench.state()['capture'])
+        self.assertEqual(len(self.client.get('/api/export?format=csv').get_data(as_text=True).splitlines()), 1)
+
+    def test_delete_requires_acquisition_fully_stopped(self):
+        self.start()
+        record = self.capture_record()
+        path = f"/api/captures/{record['id']}/delete"
+        self.assertEqual(self.post(path).status_code, 400)
+        self.post('/api/capture', {'sensor': 'water', 'label': 'dry', 'target': 120})
+        self.assertEqual(self.post(path).status_code, 400)
+        self.assertIn(record, self.bench.records)
+        self.bench.stop()
+        with patch.object(self.bench.thread, 'is_alive', return_value=True):
+            self.assertEqual(self.post(path).status_code, 400)
+        self.assertEqual(self.post(path).status_code, 200)
+
+    def test_delete_invalidates_dependent_profile_and_clears_level_on_restart(self):
+        self.start()
+        record = self.capture_record('accelerometer', 'level')
+        self.bench.stop()
+        self.bench.save_profile()
+        self.assertIn('accelerometer', self.bench.profile['sensors'])
+        result = self.post(f"/api/captures/{record['id']}/delete")
+        self.assertTrue(result.get_json()['profile_invalidated'])
+        self.assertIsNone(self.bench.state()['profile'])
+        self.assertFalse((self.bench.directory / 'profile.json').exists())
+        self.assertIsNone(Workbench(self.temp.name, simulate=True).profile)
+        self.start()
+        self.assertEqual(self.bench.device.reference, (0, 0, 1))
+
+    def test_delete_unused_capture_keeps_saved_profile(self):
+        self.start()
+        old = self.capture_record()
+        self.capture_record()
+        self.post('/api/simulation', {'water': 100})
+        self.wait(lambda: self.bench.state()['readings']['water']['raw'] < 200)
+        self.capture_record('water', 'wet')
+        self.bench.stop()
+        profile = self.bench.save_profile()
+        self.assertIn('water', profile['sensors'])
+        self.assertFalse(self.post(f"/api/captures/{old['id']}/delete").get_json()['profile_invalidated'])
+        self.assertEqual(self.bench.profile, profile)
+        self.assertEqual(Workbench(self.temp.name, simulate=True).profile, profile)
+        used_id = profile['sensors']['water']['capture_ids'][0]
+        self.assertTrue(self.post(f'/api/captures/{used_id}/delete').get_json()['profile_invalidated'])
+
+    def test_delete_file_failure_retains_record_and_reports_error(self):
+        self.start()
+        record = self.capture_record()
+        self.bench.stop()
+        with patch.object(Path, 'unlink', side_effect=PermissionError('Read-only directory')):
+            response = self.post(f"/api/captures/{record['id']}/delete")
+        self.assertEqual(response.status_code, 500)
+        self.assertIn('error', response.get_json())
+        self.assertIn(record, self.bench.records)
+        self.assertTrue((self.bench.directory / f"capture-{record['id']}.json").exists())
 
     def test_cancel_and_block_outputs_during_capture(self):
         self.start()

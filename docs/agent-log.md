@@ -223,3 +223,43 @@ and output mapping. The final trail classifier, monitoring API/dashboard, weathe
 and autonomous MVP services are still pending. This app remains a local calibration
 server, not a cloud-hosted Site or production deployment. Check Git refs after push
 for publication state; do not infer publication from this pre-push record.
+
+## 2026-11-26 UTC — Codex — delete saved calibration captures
+
+**Commit subject:** `feat: allow deleting saved calibration captures`
+
+**What:** Added a token-protected per-capture deletion endpoint and Spanish
+**Borrar** buttons with confirmation in `src/naturepath/calibration.py`,
+`static/calibration.js`, `static/calibration.css` and
+`templates/calibration.html`. Updated `tests/test_calibration.py`,
+`docs/calibration.md` and `docs/agent-context.md`.
+
+**Why / decisions:** The user requested removal of saved calibration records.
+Deletion requires acquisition to be fully stopped, removes only the selected
+capture in the current mode, updates future exports and clears a deleted capture's
+status. If the saved profile references that capture, remove the whole profile
+before deleting the observations to prevent stale references after restart;
+rebuilding remains explicit. Unused-capture deletion preserves the saved profile.
+Other captures and already-downloaded exports remain intact. File failures return
+JSON errors and retain the record when its file cannot be removed; a profile
+already removed before a subsequent file failure must be rebuilt after retrying.
+
+**Validation:** All 20 unittest checks passed after the final code/test edits,
+including five new deletion regressions covering page-token protection,
+unknown/repeated IDs, disk/restart persistence, CSV/JSON exports, hardware/simulation
+isolation, running/stopping guards, dependent/unused profiles, level reset and file
+permission errors. A temporary simulated Flask server and system Chromium via
+Playwright passed capture, disabled deletion while running, cancelling and accepting
+the confirmation, final-row removal, profile/status clearing, empty JSON export,
+reload/reinitialisation persistence and a 390px viewport overflow check, with no
+JavaScript errors. The sandbox initially blocked the local server socket; the same
+browser check passed with approved escalation. `git diff --check` passed.
+No physical sensors or actuators were activated, and no existing calibration data
+was deleted by validation.
+
+**Limitations / next:** Deletion is permanent and applies to whole captures, not
+individual samples. Export first if a backup is needed. Restart an existing
+calibration server and reload its page to use the updated code. Real soil/button
+verification, physical reference collection and remaining MVP work are still
+pending; no hardware validation is claimed. This commit is local; no push was
+requested or performed.

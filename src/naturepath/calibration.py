@@ -259,6 +259,27 @@ class Workbench:
             if self.capture and self.capture['state'] == 'collecting':
                 self.capture.update(state='cancelled')
 
+    def delete_capture(self, capture_id):
+        with self.lock:
+            record = next((r for r in self.records if r['id'] == capture_id), None)
+            if record is None:
+                raise ValueError('No se encuentra esta captura en el modo actual')
+            if self.running or (self.thread and self.thread.is_alive()):
+                raise ValueError('Detén las lecturas antes de borrar una captura')
+            invalidates_profile = bool(self.profile and any(
+                capture_id == sensor.get('capture_id') or capture_id in sensor.get('capture_ids', [])
+                for sensor in self.profile['sensors'].values()))
+            # Remove dependent references first: a failed deletion must never leave
+            # a saved profile pointing to observations that no longer exist.
+            if invalidates_profile:
+                (self.directory / 'profile.json').unlink(missing_ok=True)
+                self.profile = None
+            (self.directory / f"capture-{record['id']}.json").unlink(missing_ok=True)
+            self.records.remove(record)
+            if self.capture and self.capture['id'] == capture_id:
+                self.capture = None
+            return invalidates_profile
+
     def enqueue(self, name, value):
         with self.lock:
             if not self.running or self.stop_event.is_set() or self.latest_at is None or time.time() - self.latest_at > 4:
@@ -344,6 +365,14 @@ def create_app(workbench):
     def cancel():
         workbench.cancel_capture()
         return jsonify(ok=True)
+
+    @app.post('/api/captures/<capture_id>/delete')
+    def delete_capture(capture_id):
+        try:
+            invalidated = workbench.delete_capture(capture_id)
+        except OSError:
+            return jsonify(error='No se han podido borrar los archivos; comprueba los permisos de la carpeta y vuelve a intentarlo'), 500
+        return jsonify(ok=True, profile_invalidated=invalidated)
 
     @app.post('/api/profile')
     def profile():

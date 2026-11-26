@@ -164,6 +164,22 @@ LCD/LED bar/buzzer/button need functional tests, not numeric calibration.
   are reloaded by the tool on restart; environmental validation remains separate.
 - Sensor failure or stop aborts an unfinished capture; no partial batch is saved.
   Cancel similarly discards the in-progress batch. Older completed captures remain.
+- To remove a completed capture, stop acquisition and select **Borrar** in its
+  table row, then confirm. This permanently removes that capture's JSON file and
+  samples from future CSV/JSON exports in the current mode only. Existing downloaded
+  exports are unchanged. Export first if you need a copy.
+- Deleting a capture used by the saved profile also removes the entire profile.
+  Other captures remain; select **Guardar perfil y aplicar cero** to rebuild from
+  them, or collect replacement references first. A deleted level reference is no
+  longer applied when acquisition restarts. Deleting an unused capture preserves
+  the saved profile. Deletion stays disabled until acquisition has fully stopped.
+
+`POST /api/captures/<capture_id>/delete` uses the same page command token as other
+mutations and returns `profile_invalidated` to report whether rebuilding is needed.
+The server accepts only captures loaded for the current mode, rejects deletion
+while acquisition is running/stopping, and removes dependent profile references
+before the capture file. File permission failures return a JSON error; if profile
+removal succeeded before a capture-file failure, rebuild the profile after retrying.
 
 For review, keep exports and describe the physical procedure/results in the project
 documentation. Do not publish fictitious test data as experimental measurements.
@@ -186,7 +202,8 @@ are rejected in hardware mode. Simulation is never a fallback for hardware error
 ```
 
 Automated checks cover reference polarity/overlap, persistence, failed/cancelled
-captures, fresh observation counting, unavailable hardware and HTTP command guards.
+captures, fresh observation counting, unavailable hardware, HTTP command guards,
+and deletion persistence, mode isolation, exports and dependent-profile invalidation.
 Browser checks use explicitly simulated data. Neither these checks nor installing
 the DHT dependency establishes physical compatibility of the reported revisions.
 Real wiring, I2C addresses, output colour/order, DHT reliability and calibration

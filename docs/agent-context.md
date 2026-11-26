@@ -1,6 +1,6 @@
 # Current agent handoff context
 
-Last updated: 24 November 2026 (UTC).
+Last updated: 26 November 2026 (UTC).
 
 The user resumed preparation on 19 November, initially with modules disconnected;
 a port map and local visual calibration tool are now implemented. See the
@@ -80,6 +80,19 @@ required. Stop responds 200 when complete or 202 while a read is finishing, with
 an explicit frontend stopping state. Fifteen tests passed on 19 November, including
 two regressions; real browser start/stop/restart also passed. These corrections
 were left uncommitted at the interruption and documented/committed on 24 November.
+
+On 26 November the user requested deletion of saved calibration records. Each
+capture now has a **Borrar** action with confirmation, available after acquisition
+fully stops. The token-protected API removes the selected capture from disk,
+state and future exports in its own mode. If the saved profile uses that capture,
+the whole profile is removed and must be rebuilt explicitly; unrelated captures
+and profiles are preserved. Existing downloaded exports are unchanged. Twenty
+automated tests pass, including deletion, restart, exports, profile invalidation,
+mode isolation, running/stopping guards and file-error handling. A Chromium check
+with temporary simulated data passed capture, disabled deletion while running,
+cancel/confirm, final-row removal, profile/status clearing, export, reload and mobile
+width checks without JavaScript errors. No physical hardware activity was performed
+for this change.
 
 The user explicitly stopped testing on 19 November. Acquisition was confirmed
 stopped then, with the page still served. Do not resume physical tests until the
