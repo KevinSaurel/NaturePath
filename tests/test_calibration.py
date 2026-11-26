@@ -1,5 +1,9 @@
 """Contract, persistence and failure-path checks; never touch physical GPIO."""
 import json
+import os
+import sys
+import threading
+from types import SimpleNamespace
 import re
 import tempfile
 import time
@@ -8,7 +12,7 @@ from pathlib import Path
 
 from naturepath.calibration import Workbench, build_profile, create_app, summarise
 from naturepath.hardware import Hardware, SimulatedHardware, WIRING, signed_axis, tilt_degrees
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 
 def reference(sensor, label, values, mode='hardware'):
@@ -47,6 +51,19 @@ class ReferencesTest(unittest.TestCase):
         result = build_profile([record], 'hardware')
         self.assertNotIn('accelerometer', result['sensors'])
         self.assertTrue(any('moved' in item for item in result['pending']))
+
+    def test_dht_import_disables_interactive_dependency_installation(self):
+        device = Hardware.__new__(Hardware)
+        device.env_last, device.env_result, device.dht = 0, None, None
+        def construct(*args, **kwargs):
+            self.assertEqual(os.environ['BLINKA_SKIP_DEPENDENCY_CHECK'], '1')
+            return SimpleNamespace(temperature=26.2, humidity=38)
+        modules = {'board': SimpleNamespace(D5=5),
+                   'adafruit_dht': SimpleNamespace(DHT11=construct)}
+        with patch.dict(os.environ, {'BLINKA_SKIP_DEPENDENCY_CHECK': '0'}), patch.dict(sys.modules, modules):
+            result = device._environment()
+            self.assertEqual(result['temperature_c'], 26.2)
+            self.assertEqual(result['humidity_pct'], 38)
 
     def test_cleanup_continues_after_dht_failure(self):
         device = Hardware.__new__(Hardware)
@@ -103,6 +120,12 @@ class WorkbenchTest(unittest.TestCase):
         self.assertEqual(self.post('/api/start').status_code, 200)
         self.wait(lambda: self.bench.state()['latest_at'] is not None)
 
+    def capture_record(self, sensor='water', label='dry'):
+        self.assertEqual(self.post('/api/capture', {
+            'sensor': sensor, 'label': label, 'target': 10}).status_code, 200)
+        self.wait(lambda: self.bench.state()['capture']['state'] == 'complete')
+        return self.bench.records[-1]
+
     def test_page_is_disarmed_and_commands_require_page_token(self):
         state = self.client.get('/api/state').get_json()
         self.assertFalse(state['running'])
@@ -138,6 +161,88 @@ class WorkbenchTest(unittest.TestCase):
         hardware = Workbench(self.temp.name)
         self.assertIsNone(hardware.profile)
 
+    def test_delete_persists_updates_exports_and_preserves_other_records_and_mode(self):
+        self.start()
+        removed = self.capture_record()
+        kept = self.capture_record('moisture')
+        self.bench.stop()
+        hardware = Workbench(self.temp.name)
+        hardware_path = hardware.directory / f"capture-{removed['id']}.json"
+        hardware_record = {**removed, 'mode': 'hardware'}
+        hardware_path.write_text(json.dumps(hardware_record))
+        path = f"/api/captures/{removed['id']}/delete"
+        self.assertEqual(self.client.post(path).status_code, 403)
+        self.assertTrue((self.bench.directory / f"capture-{removed['id']}.json").exists())
+        self.assertEqual(self.post(path).get_json(), {'ok': True, 'profile_invalidated': False})
+        self.assertFalse((self.bench.directory / f"capture-{removed['id']}.json").exists())
+        self.assertEqual([r['id'] for r in self.client.get('/api/state').get_json()['records']], [kept['id']])
+        self.assertEqual([r['id'] for r in self.client.get('/api/export').get_json()['records']], [kept['id']])
+        csv = self.client.get('/api/export?format=csv').get_data(as_text=True)
+        self.assertNotIn(removed['id'], csv)
+        self.assertIn(kept['id'], csv)
+        self.assertEqual([r['id'] for r in Workbench(self.temp.name, simulate=True).records], [kept['id']])
+        self.assertEqual(Workbench(self.temp.name).records, [hardware_record])
+        self.assertEqual(self.post(path).status_code, 400)
+        self.assertEqual(self.post('/api/captures/unknown/delete').status_code, 400)
+        self.assertEqual(self.post(f"/api/captures/{kept['id']}/delete").status_code, 200)
+        self.assertEqual(self.client.get('/api/export').get_json()['records'], [])
+        self.assertIsNone(self.bench.state()['capture'])
+        self.assertEqual(len(self.client.get('/api/export?format=csv').get_data(as_text=True).splitlines()), 1)
+
+    def test_delete_requires_acquisition_fully_stopped(self):
+        self.start()
+        record = self.capture_record()
+        path = f"/api/captures/{record['id']}/delete"
+        self.assertEqual(self.post(path).status_code, 400)
+        self.post('/api/capture', {'sensor': 'water', 'label': 'dry', 'target': 120})
+        self.assertEqual(self.post(path).status_code, 400)
+        self.assertIn(record, self.bench.records)
+        self.bench.stop()
+        with patch.object(self.bench.thread, 'is_alive', return_value=True):
+            self.assertEqual(self.post(path).status_code, 400)
+        self.assertEqual(self.post(path).status_code, 200)
+
+    def test_delete_invalidates_dependent_profile_and_clears_level_on_restart(self):
+        self.start()
+        record = self.capture_record('accelerometer', 'level')
+        self.bench.stop()
+        self.bench.save_profile()
+        self.assertIn('accelerometer', self.bench.profile['sensors'])
+        result = self.post(f"/api/captures/{record['id']}/delete")
+        self.assertTrue(result.get_json()['profile_invalidated'])
+        self.assertIsNone(self.bench.state()['profile'])
+        self.assertFalse((self.bench.directory / 'profile.json').exists())
+        self.assertIsNone(Workbench(self.temp.name, simulate=True).profile)
+        self.start()
+        self.assertEqual(self.bench.device.reference, (0, 0, 1))
+
+    def test_delete_unused_capture_keeps_saved_profile(self):
+        self.start()
+        old = self.capture_record()
+        self.capture_record()
+        self.post('/api/simulation', {'water': 100})
+        self.wait(lambda: self.bench.state()['readings']['water']['raw'] < 200)
+        self.capture_record('water', 'wet')
+        self.bench.stop()
+        profile = self.bench.save_profile()
+        self.assertIn('water', profile['sensors'])
+        self.assertFalse(self.post(f"/api/captures/{old['id']}/delete").get_json()['profile_invalidated'])
+        self.assertEqual(self.bench.profile, profile)
+        self.assertEqual(Workbench(self.temp.name, simulate=True).profile, profile)
+        used_id = profile['sensors']['water']['capture_ids'][0]
+        self.assertTrue(self.post(f'/api/captures/{used_id}/delete').get_json()['profile_invalidated'])
+
+    def test_delete_file_failure_retains_record_and_reports_error(self):
+        self.start()
+        record = self.capture_record()
+        self.bench.stop()
+        with patch.object(Path, 'unlink', side_effect=PermissionError('Read-only directory')):
+            response = self.post(f"/api/captures/{record['id']}/delete")
+        self.assertEqual(response.status_code, 500)
+        self.assertIn('error', response.get_json())
+        self.assertIn(record, self.bench.records)
+        self.assertTrue((self.bench.directory / f"capture-{record['id']}.json").exists())
+
     def test_cancel_and_block_outputs_during_capture(self):
         self.start()
         self.post('/api/capture', {'sensor': 'water', 'label': 'dry', 'target': 120})
@@ -157,6 +262,33 @@ class WorkbenchTest(unittest.TestCase):
             self.assertEqual(response.status_code, 400, response.get_data(as_text=True))
         self.assertEqual(self.post('/api/simulation', {'water': 99999}).status_code, 400)
         self.assertEqual(self.post('/api/output/unknown').status_code, 400)
+
+    def test_stop_returns_accepted_while_read_finishes_then_is_idempotent(self):
+        entered, release = threading.Event(), threading.Event()
+        class SlowHardware(SimulatedHardware):
+            def read(self):
+                entered.set()
+                release.wait(timeout=5)
+                return super().read()
+        bench = Workbench(self.temp.name, simulate=True, factory=SlowHardware)
+        client = create_app(bench).test_client()
+        html = client.get('/').get_data(as_text=True)
+        token = re.search('name="naturepath-token" content="([^\"]+)"', html).group(1)
+        headers = {'X-NaturePath-Token': token}
+        try:
+            client.post('/api/start', headers=headers)
+            self.assertTrue(entered.wait(timeout=1))
+            response = client.post('/api/stop', headers=headers)
+            self.assertEqual(response.status_code, 202)
+            self.assertTrue(response.get_json()['stopping'])
+            self.assertTrue(client.get('/api/state').get_json()['stopping'])
+            release.set()
+            self.wait(lambda: not bench.state()['running'])
+            self.assertEqual(client.post('/api/stop', headers=headers).status_code, 200)
+            self.assertFalse(bench.state()['stopping'])
+        finally:
+            release.set()
+            bench.stop()
 
     def test_missing_hardware_reports_error_without_simulation_fallback(self):
         def unavailable():

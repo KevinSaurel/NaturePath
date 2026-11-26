@@ -1,8 +1,8 @@
 # Current agent handoff context
 
-Last updated: 19 November 2026 (UTC).
+Last updated: 26 November 2026 (UTC).
 
-The user resumed preparation on 19 November. Modules were reported disconnected;
+The user resumed preparation on 19 November, initially with modules disconnected;
 a port map and local visual calibration tool are now implemented. See the
 [19 November session record](sessions/2026-11-19.md) for this work. The previous
 [session summary](sessions/2026-11-12.md) is historical, not a current stop request.
@@ -14,21 +14,28 @@ Kevin Saurel and Ruben Alonso. It provides inclusive trail-condition guidance vi
 sensing, analysis and physical feedback. It is not a safety/accessibility guarantee.
 
 The user confirmed: implement the complete MVP first and scale only if needed.
-The supplied assessment text concerns the proposal and permits a local server;
-it does not establish MQTT, cloud platforms or Edge AI as mandatory MVP features.
-Its October dates are proposal dates. The implementation deadline is not confirmed.
+The supplied proposal assessment permits a local server and does not itself make
+MQTT, cloud platforms or Edge AI mandatory. On 26 November the live GitHub issues
+established the current team plan: Sprint 2 review on 3 December, final submission
+by 11 December and a live demo during the week of 14 December. These dates come
+from GitHub milestones/issues #13/#22, not an independently checked final brief.
+Local MQTT is now a planned P1 Sprint 3 issue (#17), after the core vertical slice.
+This explicitly corrects the previous unconfirmed-date and blanket MQTT-extension
+assumptions; cloud platforms and trained models are still extensions.
 
 Target: Raspberry Pi 5 + Grove sensors + Python + Flask + SQLite; LCD, LED, buzzer
 and a visitor button. The experimental index uses `good`, `caution`, `poor` and
 `unavailable`. Keep the primary visitor experience physical; the dashboard is for
 monitoring. All required hardware is available according to the user. The reported
 board labels/revisions are now recorded in `docs/hardware.md`; connections,
-chip identification where inferred, operation and calibration remain unverified.
+chip identification where inferred and calibration remain unverified. Later that
+day, real readings and user-observed output checks were obtained as noted below.
 
 ## Repository and reference material
 
 - Local repository: `/home/hugokevinruben/NaturePath`.
-- GitHub: https://github.com/KevinSaurel/NaturePath; HTTPS remote, branch `main`.
+- GitHub: https://github.com/KevinSaurel/NaturePath; HTTPS remote, default branch `main`.
+  Work on task branches; this workflow update uses `docs/github-project-workflow`.
 - Account used for successful pushes: `hugoArenaza-deusto` (different from owner).
 - Original proposal: `docs/challengeIoT_groupXX-1.pdf`; searchable text in `docs/challenge.md`.
 - Lab archive: `~/IoT_labs_y_proyecto_contexto.zip`; Labs 1, 3, 4, 5, 6 and proposal.
@@ -39,6 +46,37 @@ chip identification where inferred, operation and calibration remain unverified.
 
 Do not upload the raw lab archive or a verbatim chat transcript. Teaching materials
 and conversation may contain credentials; document only relevant project context.
+
+## GitHub coordination (26 November 2026 snapshot)
+
+The user requires checking the related issues and configured Project before
+committing. This is now part of root `AGENTS.md`; see the operational commands in
+[git-setup.md](git-setup.md#current-issue-and-project-workflow). Recheck live data
+before each task/commit rather than treating this snapshot as authoritative.
+
+- All 22 issues were retrieved via the GitHub connector. Issues #1–#6 are closed;
+  #7 (real calibration) and #8 (acquisition) are open with issue status
+  `In progress`; #9–#22 are open with issue status `Todo`. Project custom field
+  values and Project URL/owner/number remain unverified until Project access works.
+- Official milestone dates: Sprint 1, 3–17 November; Sprint 2, 17 November–3 December;
+  Sprint 3, 3–11 December. The four local roadmap stages are implementation
+  increments, not official sprints. Issue #13 requires a real sensor → storage →
+  visualisation review; #22 covers final release/ALUD submission and the live demo.
+- The deletion commit `5558231` supports #7 (Kevin and Hugo assigned), and extends
+  the workbench originally tracked by closed #4. It does not complete #7, whose
+  criteria still require real labelled captures, repeatability and exported profiles.
+  This follow-up documents that relationship without rewriting earlier commits.
+- Issue #6 is marked Done in GitHub, while local physical evidence still lacks
+  soil wet/dry response and a button press transition. Preserve that distinction;
+  task state alone does not validate hardware. No remote issue was changed.
+- `gh` 2.46.0 was installed from Debian's arm64 package at `~/.local/bin/gh`.
+  System installation required an unavailable sudo password, so the approved
+  user-local installation was used. No CLI login or GitHub environment credential
+  existed at the check. The user was asked to authenticate interactively with
+  Project read access; do not ask for or print tokens. Connector login is separate.
+- GitHub `main` was read at `f890da4` during this check; local `ec4679a` and
+  `5558231` were not present there. Do not assume they were pushed. No push,
+  PR, review, issue transition or Project edit was performed by this update.
 
 ## Verified state
 
@@ -64,7 +102,38 @@ Use `bash scripts/run_calibration.sh` and the Pi browser at `http://127.0.0.1:50
 It starts disarmed until the page's start action. `--simulate` is explicit and
 stores data separately. See [calibration.md](calibration.md).
 
-No individual physical NaturePath module or real calibration has been validated.
+On 19 November the user connected the modules and authorised manual API checks.
+I2C scanning detected `0x08`, `0x3E` and `0x4C`. Real accelerometer, ambient and water
+channel readings arrived. Soil A0 stayed at raw 0 / 0 mV; wet/dry response is still
+unverified. The user confirmed LCD text, buzzer, button LED and LED bar physically.
+The button input was read as unpressed but a press transition was not observed.
+Ambient readings arrived with intermittent DHT failures. No real calibration
+references or complete profiles were produced.
+
+The initial acquisition hang and HTTP 400 on stop were traced to Blinka's interactive
+optional-dependency prompt during the DHT import. The driver now sets
+`BLINKA_SKIP_DEPENDENCY_CHECK=1` internally before that import; no user `.env` is
+required. Stop responds 200 when complete or 202 while a read is finishing, with
+an explicit frontend stopping state. Fifteen tests passed on 19 November, including
+two regressions; real browser start/stop/restart also passed. These corrections
+were left uncommitted at the interruption and documented/committed on 24 November.
+
+On 26 November the user requested deletion of saved calibration records. Each
+capture now has a **Borrar** action with confirmation, available after acquisition
+fully stops. The token-protected API removes the selected capture from disk,
+state and future exports in its own mode. If the saved profile uses that capture,
+the whole profile is removed and must be rebuilt explicitly; unrelated captures
+and profiles are preserved. Existing downloaded exports are unchanged. Twenty
+automated tests pass, including deletion, restart, exports, profile invalidation,
+mode isolation, running/stopping guards and file-error handling. A Chromium check
+with temporary simulated data passed capture, disabled deletion while running,
+cancel/confirm, final-row removal, profile/status clearing, export, reload and mobile
+width checks without JavaScript errors. No physical hardware activity was performed
+for this change.
+
+The user explicitly stopped testing on 19 November. Acquisition was confirmed
+stopped then, with the page still served. Do not resume physical tests until the
+user requests it. No hardware activity was performed for the 24 November question.
 The final trail classifier, monitoring/history API, weather integration and
 systemd MVP services remain pending. The calibration API is not the final MVP API.
 
@@ -85,22 +154,24 @@ systemd MVP services remain pending. The calibration API is not the final MVP AP
   owns GPIO; HTTP requests/reloaders must not start additional acquisition loops.
 - A failed mandatory sensor must not yield `good`; loss of optional weather context
   should be exposed without disabling valid local feedback.
-- MQTT/platforms, trained anomaly detection and distributed outdoor nodes are extensions.
+- Local MQTT is P1 Sprint 3 work in GitHub #17, after the core flow. Cloud
+  platforms, trained anomaly detection and distributed outdoor nodes remain extensions.
 
 ## Pending inputs and next implementation step
 
-The user reports all modules are disconnected. Assigned map: moisture A0, water
+The user later confirmed all modules were connected. Assigned map: moisture A0, water
 A2, expected DHT11 D5, buzzer D16, LED bar D22 (data 22/clock 23), red LED button
 D24 (LED 24/input 25), LCD and accelerometer on separate shared-bus I2C sockets.
-The user must wire with power off, then confirm connections. No real acquisitions
-or output tests were automatically started during software verification.
+Initial wiring and tests are recorded above. Any later rewiring requires power off.
 
-Next: start the calibration page, verify modules individually, collect soil
+When the user resumes tests: verify soil response and button input, then collect soil
 references (dry/damp/wet), water references (dry/wet), and an immobile level vector
 plus known-angle checks. Confirm ambient chip identity and timing reliability.
 The tool rejects overlapping reference ranges and keeps captures/errors explicit.
-Confirm monitored location and implementation deadline when available. Real
-physical evidence is required before treating a profile as validated.
+Confirm the monitored location and remaining submission details; use the official
+GitHub milestone dates above for scheduling. Real physical evidence is required
+before treating a profile as validated. Acquisition #8 can proceed independently
+of soil samples, as the current #7/#8 implementation guides explicitly state.
 
 ## Operational history and limitations
 

@@ -223,3 +223,98 @@ and output mapping. The final trail classifier, monitoring API/dashboard, weathe
 and autonomous MVP services are still pending. This app remains a local calibration
 server, not a cloud-hosted Site or production deployment. Check Git refs after push
 for publication state; do not infer publication from this pre-push record.
+
+## 2026-11-26 UTC — Codex — delete saved calibration captures
+
+**Commit subject:** `feat: allow deleting saved calibration captures`
+
+**What:** Added a token-protected per-capture deletion endpoint and Spanish
+**Borrar** buttons with confirmation in `src/naturepath/calibration.py`,
+`static/calibration.js`, `static/calibration.css` and
+`templates/calibration.html`. Updated `tests/test_calibration.py`,
+`docs/calibration.md` and `docs/agent-context.md`.
+
+**Why / decisions:** The user requested removal of saved calibration records.
+Deletion requires acquisition to be fully stopped, removes only the selected
+capture in the current mode, updates future exports and clears a deleted capture's
+status. If the saved profile references that capture, remove the whole profile
+before deleting the observations to prevent stale references after restart;
+rebuilding remains explicit. Unused-capture deletion preserves the saved profile.
+Other captures and already-downloaded exports remain intact. File failures return
+JSON errors and retain the record when its file cannot be removed; a profile
+already removed before a subsequent file failure must be rebuilt after retrying.
+
+**Validation:** All 20 unittest checks passed after the final code/test edits,
+including five new deletion regressions covering page-token protection,
+unknown/repeated IDs, disk/restart persistence, CSV/JSON exports, hardware/simulation
+isolation, running/stopping guards, dependent/unused profiles, level reset and file
+permission errors. A temporary simulated Flask server and system Chromium via
+Playwright passed capture, disabled deletion while running, cancelling and accepting
+the confirmation, final-row removal, profile/status clearing, empty JSON export,
+reload/reinitialisation persistence and a 390px viewport overflow check, with no
+JavaScript errors. The sandbox initially blocked the local server socket; the same
+browser check passed with approved escalation. `git diff --check` passed.
+No physical sensors or actuators were activated, and no existing calibration data
+was deleted by validation.
+
+**Limitations / next:** Deletion is permanent and applies to whole captures, not
+individual samples. Export first if a backup is needed. Restart an existing
+calibration server and reload its page to use the updated code. Real soil/button
+verification, physical reference collection and remaining MVP work are still
+pending; no hardware validation is claimed. This commit is local; no push was
+requested or performed.
+
+## 2026-11-26 UTC — Codex — GitHub issue and Project coordination
+
+**Commit subject:** `docs: align agent workflow with GitHub issues and milestones`
+
+**Issue references:** `Refs #5, #7`. This is a follow-up to closed tracking issue
+#5, and documents that capture deletion in `5558231` supports still-open #7.
+Neither reference claims completion of outstanding physical calibration.
+
+**What:** Added live issue/Project checks before work and each logical commit to
+`AGENTS.md`, including acceptance criteria, comments, status, priority,
+dependencies, assignees and official sprint. Documented task branches, issue
+references, evidence/PR review requirements and access-limit reporting in
+`docs/git-setup.md`. Reconciled `docs/agent-context.md` and `docs/roadmap.md` with
+GitHub's three official milestones, 3 December review, 11 December submission,
+week-of-14-December demo and P1 local MQTT task #17. Renamed the old roadmap's four
+stages as implementation increments rather than official sprints. Preserved
+historical records and distinguished issue status from unread Project fields.
+
+**Why / decisions:** The user requested alignment with configured GitHub tracking
+and installation of gh if necessary. Retrieved all 22 issues via the connector,
+reviewed the related issues/acceptance guides, and rechecked #5/#7 and #7 comments
+before committing. Issues #7/#8 remain In progress, #1–#6 are closed, and #9–#22
+are Todo in the issue metadata snapshot. Issue #6's Done state is not additional
+physical evidence for local soil/button uncertainties. Do not close #7 based on
+software-only work. Created local branch `docs/github-project-workflow`; earlier
+commits were not rewritten. No issue, Project item, assignment or milestone was
+changed remotely, and no comment/message was posted.
+
+**CLI setup / access:** gh was absent. The approved system apt installation could
+not proceed because sudo required an unavailable interactive password. Downloaded
+Debian's gh 2.46.0-3 arm64 package and installed its executable with approved
+user-local access at `~/.local/bin/gh`, without changing system packages. The
+executable is on PATH and reports version 2.46.0. CLI auth status reports no login;
+no existing CLI auth configuration or GitHub environment credential was detected.
+The user was asked to authenticate interactively with read:project access. The
+GitHub connector supplies issue reads but no Project v2 read operation, and public
+web reads of the repository/user Project pages failed. Project URL/owner/number,
+custom fields and item status therefore remain unverified; no values were inferred.
+
+**Validation:** `gh --version`, command discovery and issue-view help succeeded;
+`gh auth status` correctly reported missing authentication. Connector reads
+verified all issue metadata, related criteria/comments, milestone dates, no open
+PRs and remote main at `f890da4` during this check. Local commits `ec4679a` and
+`5558231` were not on that remote main snapshot. Checked local Markdown file links,
+reviewed the documentation diff and ran `git diff --check`, all successfully.
+The documented authenticated CLI/Project commands could not be exercised before
+login. Application tests were not rerun for this documentation/setup change; no
+application code or hardware was touched.
+
+**Limitations / next:** Complete interactive gh login, then identify and read the
+actual linked Project, fields and related items; record verified ownership/status
+and any mismatches. Check live refs again before publishing, then use the team's
+PR review flow with issue references. This documentation commit is local; no
+push, PR creation, review or merge was requested or performed.
